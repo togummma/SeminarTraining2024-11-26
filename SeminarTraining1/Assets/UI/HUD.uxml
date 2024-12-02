@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/HUD.uss?fileID=7433441132597879392&amp;guid=61f22759c6fb94e4cb52b015fa6fe7ca&amp;type=3#HUD" />
+    <ui:VisualElement name="hud-container" class="hud-container">
+        <ui:Label name="score-label" text="Score: 0" class="hud-label" />
+        <ui:ProgressBar name="health-bar" class="hud-progress-bar" />
+        <ui:ProgressBar name="attack-gauge-bar" class="hud-progress-bar" />
+
+    </ui:VisualElement>
+</ui:UXML>
