@@ -13,13 +13,11 @@ public class PlayerAttackController : MonoBehaviour
 
     void Start()
     {
-        // bulletPrefabが設定されていない場合の警告
         if (bulletPrefab == null)
         {
             Debug.LogError("弾Prefabが設定されていません！");
         }
 
-        // crosshairManagerを自動で探す
         if (crosshairManager == null)
         {
             crosshairManager = GetComponent<PlayerAttackCrosshairManager>();
@@ -29,7 +27,6 @@ public class PlayerAttackController : MonoBehaviour
             }
         }
 
-        // playerTransformが設定されていない場合の警告
         if (playerTransform == null)
         {
             playerTransform = transform; // 自身のTransformをデフォルトに設定
@@ -42,42 +39,55 @@ public class PlayerAttackController : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             Vector3 targetPoint = crosshairManager.GetTargetPoint();
+            if (targetPoint == Vector3.zero)
+            {
+                Debug.LogError("targetPoint が無効です。クロスヘアが正しく動作しているか確認してください。");
+                return;
+            }
+
             AlignPlayerToShootDirection(targetPoint);
             Shoot(targetPoint);
         }
     }
 
-    // プレイヤーの向きを射撃方向に合わせる
     void AlignPlayerToShootDirection(Vector3 targetPoint)
     {
         Vector3 directionToTarget = (targetPoint - playerTransform.position).normalized;
 
-        // 水平方向のみを考慮してプレイヤーを回転
-        directionToTarget.y = 0f; // Y軸成分を無視して水平方向の回転のみ適用
-        if (directionToTarget.sqrMagnitude > 0.01f) // 無効な方向を防ぐ
+        directionToTarget.y = 0f; // Y軸成分を無視
+        if (directionToTarget.sqrMagnitude > 0.01f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
             playerTransform.rotation = targetRotation;
         }
     }
 
-    // 弾を発射
     void Shoot(Vector3 targetPoint)
     {
-        Vector3 directionToTarget = (targetPoint - playerTransform.position).normalized;
+        if (bulletPrefab == null)
+        {
+            Debug.LogError("弾Prefabが設定されていません。");
+            return;
+        }
 
-        // 発射位置を計算
+        Vector3 directionToTarget = (targetPoint - playerTransform.position).normalized;
         Vector3 spawnPosition = playerTransform.position + directionToTarget * spawnDistance;
 
-        // 弾を生成して発射
-        if (bulletPrefab != null)
+        GameObject bullet = Instantiate(bulletPrefab, spawnPosition, Quaternion.identity);
+        if (bullet == null)
         {
-            GameObject bullet = Instantiate(bulletPrefab, spawnPosition, Quaternion.identity);
-            Rigidbody rb = bullet.GetComponent<Rigidbody>();
-            if (rb != null)
-            {
-                rb.AddForce(directionToTarget * bulletForce, ForceMode.Impulse);
-            }
+            Debug.LogError("弾の生成に失敗しました。");
+            return;
         }
+
+        BallMovementManager ballManager = bullet.GetComponent<BallMovementManager>();
+        if (ballManager == null)
+        {
+            Debug.LogError("生成された弾に BallMovementManager がアタッチされていません。");
+            return;
+        }
+
+        Debug.Log("Launching ball...");
+        ballManager.Launch(directionToTarget, bulletForce);
     }
 }

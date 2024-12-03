@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 2761503034718155700}
   - component: {fileID: 7370471411136809473}
   - component: {fileID: 2286265394390316627}
+  - component: {fileID: 186112558121323264}
   - component: {fileID: 8747306048672127726}
-  - component: {fileID: -294256376957083568}
   - component: {fileID: 2341777090758492273}
   m_Layer: 0
   m_Name: Ball
@@ -89,6 +89,21 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &186112558121323264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3303881984118643195}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e64eeb1a0a95d304e96bdc34b3c485d3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dynamicDuration: 2
+  airResistance: 0.1
+  minSpeed: 0.1
 --- !u!135 &8747306048672127726
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -110,20 +125,6 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &-294256376957083568
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3303881984118643195}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a25079d41bc61a3468af6be3806c2a08, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maintainForceTime: 3
-  decelerationRate: 2
 --- !u!54 &2341777090758492273
 Rigidbody:
   m_ObjectHideFlags: 0
