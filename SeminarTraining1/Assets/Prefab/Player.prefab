@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: -7384138829878664257}
   - component: {fileID: 3979865714538079623}
   - component: {fileID: 7903631080708625284}
-  - component: {fileID: 2680617670944179572}
+  - component: {fileID: 7333029223542199870}
   - component: {fileID: 7498240040043703295}
   - component: {fileID: 2805189155863197635}
   m_Layer: 0
@@ -136,7 +136,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 100
---- !u!114 &2680617670944179572
+--- !u!114 &7333029223542199870
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -145,7 +145,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 419516780278590311}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86ed9f1569dd4b245b07040e88439da0, type: 3}
+  m_Script: {fileID: 11500000, guid: 0741b3f85c5d9354784eec0f89954f89, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 20
