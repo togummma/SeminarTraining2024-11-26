@@ -105,9 +105,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bulletPrefab: {fileID: 3303881984118643195, guid: 2c3cdc59800f12d458655dd46acbc9f2, type: 3}
-  bulletOffset: {x: 0, y: 1, z: 1}
+  spawnDistance: 5
   bulletForce: 20
   playerCamera: {fileID: 2649436561005660965, guid: b194837818145e349a2d3d33fb59e592, type: 3}
+  playerTransform: {fileID: 2414275433379867916}
 --- !u!114 &3979865714538079623
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -120,7 +121,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 39fcca44401188c4589f748810e696bf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackCooldown: 5
+  attackCooldown: 2
   initialGaugeRatio: 0.873
 --- !u!114 &7903631080708625284
 MonoBehaviour:
@@ -147,9 +148,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86ed9f1569dd4b245b07040e88439da0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 5
+  moveSpeed: 20
+  rotationSpeed: 10
   buoyancy: 2
   drag: 0.9
+  playerCamera: {fileID: 0}
 --- !u!135 &7498240040043703295
 SphereCollider:
   m_ObjectHideFlags: 0

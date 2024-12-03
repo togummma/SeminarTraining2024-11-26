@@ -4,19 +4,17 @@ public class PlayerAttackManager : MonoBehaviour
 {
     [Header("弾の設定")]
     public GameObject bulletPrefab; // 弾のPrefab
-    public Vector3 bulletOffset = new Vector3(0f, 1f, 1f); // 発射位置のオフセット
+    public float spawnDistance = 2f; // プレイヤーからの弾の生成距離
     public float bulletForce = 20f; // 弾の発射時の力（ニュートン）
 
     [Header("カメラ設定")]
     public Camera playerCamera; // 攻撃方向を決定するカメラ
+    public Transform playerTransform; // プレイヤーのTransform（弾の生成基準）
 
-    private AttackCooldownManager cooldownManager;
+    private LineRenderer lineRenderer;
 
     void Start()
     {
-        // 同じオブジェクトにあるクールダウンマネージャーを取得
-        cooldownManager = GetComponent<AttackCooldownManager>();
-
         if (bulletPrefab == null)
         {
             Debug.LogError("弾Prefabが設定されていません！");
@@ -24,49 +22,107 @@ public class PlayerAttackManager : MonoBehaviour
 
         if (playerCamera == null)
         {
-            Debug.LogError("プレイヤーのカメラが設定されていません！");
+            Debug.LogError("カメラが設定されていません！");
         }
+
+        if (playerTransform == null)
+        {
+            Debug.LogError("プレイヤーのTransformが設定されていません！");
+        }
+
+        // LineRendererの設定
+        lineRenderer = gameObject.AddComponent<LineRenderer>();
+        lineRenderer.startWidth = 0.05f; // 線の開始幅
+        lineRenderer.endWidth = 0.05f;   // 線の終了幅
+        lineRenderer.material = new Material(Shader.Find("Unlit/Color"));
+        lineRenderer.material.color = Color.green; // 緑色の線
     }
 
     void Update()
     {
-        // 左クリックで攻撃
-        if (Input.GetMouseButtonDown(0) && cooldownManager != null && cooldownManager.CanAttack())
+        // 常にレイキャストの可視化を更新
+        UpdateVisualizedRay();
+
+        if (Input.GetMouseButtonDown(0))
         {
-            FireProjectile();
-            cooldownManager.ResetGauge(); // クールダウンをリセット
+            AlignPlayerToShootDirection();
+            Shoot();
         }
     }
 
-    /// <summary>
-    /// 弾を発射
-    /// </summary>
-    private void FireProjectile()
+    // 射撃処理
+    void Shoot()
     {
-        // カメラの正面方向に基づいて発射位置と方向を計算
-        Vector3 spawnPosition = playerCamera.transform.position + playerCamera.transform.forward * 1.5f;
-        Vector3 fireDirection = playerCamera.transform.forward;
+        Ray ray = new Ray(playerTransform.position, playerTransform.forward);
+        RaycastHit hit;
 
-        if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out RaycastHit hit))
+        Vector3 targetPoint;
+        if (Physics.Raycast(ray, out hit, 100f))
         {
-            // ヒットした位置に向けて発射方向を調整
-            fireDirection = (hit.point - spawnPosition).normalized;
-        }
-
-        // 弾を生成
-        GameObject bullet = Instantiate(bulletPrefab, spawnPosition, Quaternion.LookRotation(fireDirection));
-
-        /// BallMovementを使用して初期力を設定
-        BallMovement ballMovement = bullet.GetComponent<BallMovement>();
-        if (ballMovement != null)
-        {
-            ballMovement.SetInitialForce(bulletForce); // 初期力を設定
+            targetPoint = hit.point;
         }
         else
         {
-            Debug.LogError("弾PrefabにBallMovementコンポーネントがアタッチされていません！");
+            targetPoint = ray.GetPoint(100f);
         }
 
-        Debug.Log($"弾を発射しました！ 力: {bulletForce}N, 発射位置: {spawnPosition}, 発射方向: {fireDirection}");
+        Vector3 shootDirection = (targetPoint - playerTransform.position).normalized;
+        Vector3 spawnPosition = playerTransform.position + shootDirection * spawnDistance;
+
+        if (bulletPrefab != null)
+        {
+            GameObject bullet = Instantiate(bulletPrefab, spawnPosition, Quaternion.identity);
+            Rigidbody rb = bullet.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.AddForce(shootDirection * bulletForce, ForceMode.Impulse);
+            }
+        }
+    }
+
+    // プレイヤーの向きを射撃方向に合わせる
+    void AlignPlayerToShootDirection()
+    {
+        Ray ray = new Ray(playerTransform.position, playerTransform.forward);
+        RaycastHit hit;
+
+        Vector3 targetPoint;
+        if (Physics.Raycast(ray, out hit, 100f))
+        {
+            targetPoint = hit.point;
+        }
+        else
+        {
+            targetPoint = ray.GetPoint(100f);
+        }
+
+        Vector3 shootDirection = (targetPoint - playerTransform.position).normalized;
+        Quaternion targetRotation = Quaternion.LookRotation(new Vector3(shootDirection.x, 0, shootDirection.z));
+        playerTransform.rotation = targetRotation;
+    }
+
+    // レイキャストの可視化を常に更新
+    void UpdateVisualizedRay()
+    {
+        if (lineRenderer == null || playerCamera == null) return;
+
+        // プレイヤーの位置と向きを基準にレイキャスト
+        Ray ray = new Ray(playerTransform.position, playerTransform.forward);
+        RaycastHit hit;
+
+        Vector3 endPoint;
+        if (Physics.Raycast(ray, out hit, 100f))
+        {
+            endPoint = hit.point;
+        }
+        else
+        {
+            endPoint = ray.GetPoint(100f);
+        }
+
+        // LineRendererを更新
+        lineRenderer.positionCount = 2;
+        lineRenderer.SetPosition(0, ray.origin); // プレイヤー位置
+        lineRenderer.SetPosition(1, endPoint);   // レイキャストの終点
     }
 }

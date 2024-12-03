@@ -3,15 +3,11 @@ using UnityEngine;
 public class BallMovement : MonoBehaviour
 {
     public float maintainForceTime = 3f; // 力を維持する時間（秒）
-    public float decelerationRate = 2f; // 減速率
-    private float currentForce; // 現在の力
-    private bool isDecelerating = false; // 減速中かどうか
+    public float dragCoefficient = 0.1f; // 空気抵抗の強さ（調整可能）
+    private float initialForce; // 初期力
     private Rigidbody rb;
 
-    private static float sharedForce = 0f; // すべての玉で共有する力
-    private static bool sharedForceUpdated = false; // 共有力が更新されたかどうか
-
-    void Start()
+    private void Start()
     {
         rb = GetComponent<Rigidbody>();
         if (rb == null)
@@ -22,44 +18,33 @@ public class BallMovement : MonoBehaviour
 
         rb.useGravity = false; // 重力を無効化
 
-        // 初期力が設定されていない場合、警告を表示
-        if (currentForce <= 0)
-        {
-            Debug.LogWarning("初期力が設定されていません。SetInitialForceメソッドを呼び出してください。");
-        }
-
         // 初速度を力として適用
-        ApplyForce();
-
-        // 力維持後に減速を開始
-        Invoke(nameof(StartDeceleration), maintainForceTime);
+        ApplyInitialForce();
     }
 
     void Update()
     {
-        // 減速中の力計算
-        if (isDecelerating && currentForce > 0)
-        {
-            currentForce -= decelerationRate * Time.deltaTime;
-            currentForce = Mathf.Max(0, currentForce); // 力が0以下にならないようにする
-            ApplyForce();
-        }
+        // 空気抵抗に基づいて減速させる
+        ApplyDragForce();
 
-        // 共有力が更新されている場合、全てのボールの力を統一
-        if (sharedForceUpdated)
+        // 玉が速度が十分に小さくなるまで減速を続ける
+        if (rb.velocity.magnitude < 0.1f)
         {
-            currentForce = sharedForce;
-            ApplyForce();
-            if (currentForce <= 0)
-            {
-                sharedForceUpdated = false; // 更新完了
-            }
+            rb.velocity = Vector3.zero; // 完全に停止させる
         }
     }
 
-    private void StartDeceleration()
+    private void ApplyInitialForce()
     {
-        isDecelerating = true;
+        // 初期力を直接設定し、力を適用
+        rb.velocity = transform.forward * initialForce; // 発射方向に初期速度を設定
+    }
+
+    private void ApplyDragForce()
+    {
+        // 空気抵抗を速度の2乗に比例して減少させる
+        Vector3 dragForce = -rb.velocity.normalized * dragCoefficient * rb.velocity.sqrMagnitude;
+        rb.AddForce(dragForce, ForceMode.Force); // 継続的に空気抵抗を加える
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -70,33 +55,19 @@ public class BallMovement : MonoBehaviour
             BallMovement otherBall = collision.gameObject.GetComponent<BallMovement>();
             if (otherBall != null)
             {
-                // 共有力を統一
-                sharedForce = Mathf.Min(sharedForce > 0 ? sharedForce : currentForce, currentForce);
-                sharedForceUpdated = true;
+                // 衝突したボールの力を統一
+                initialForce = Mathf.Min(initialForce, otherBall.initialForce);
+                ApplyInitialForce();
             }
         }
     }
 
     /// <summary>
-    /// 呼び出し側から力の大きさを設定
+    /// 呼び出し側から初期力の大きさを設定
     /// </summary>
     /// <param name="force">初期力</param>
     public void SetInitialForce(float force)
     {
-        currentForce = force;
-        sharedForce = force; // 共有力も更新
-    }
-
-    /// <summary>
-    /// Rigidbodyに力を適用
-    /// </summary>
-    private void ApplyForce()
-    {
-        if (rb != null)
-        {
-            // AddForceを使用して力を加える（減速を自然に反映）
-            Vector3 forceDirection = transform.forward * currentForce;
-            rb.AddForce(forceDirection, ForceMode.Force); // 継続的に力を加える
-        }
+        initialForce = force;
     }
 }

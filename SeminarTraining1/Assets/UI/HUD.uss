@@ -23,3 +23,16 @@
     background-color: grey;
     border-radius: 5px;
 }
+/* クロスヘアのスタイル */
+.crosshair {
+    width: 10px;
+    height: 10px;
+    background-color: white;
+    border-radius: 50%; /* 丸い形状に */
+    position: absolute;
+    top: 50%; /* 画面中央 */
+    left: 50%;
+    transform: translate(-50%, -50%); /* 完全な中央配置 */
+    opacity: 0.8; /* 半透明 */
+    pointer-events: none; /* クリックを無効化 */
+}
