@@ -8,10 +8,10 @@ public class PlayerAttackManager : MonoBehaviour
     public float bulletForce = 20f; // 弾の発射時の力（ニュートン）
 
     [Header("カメラ設定")]
-    public Camera playerCamera; // 攻撃方向を決定するカメラ
+    public Camera playerCamera; // TPSカメラ
     public Transform playerTransform; // プレイヤーのTransform（弾の生成基準）
 
-    private LineRenderer lineRenderer;
+    private LineRenderer lineRenderer; // レイキャスト表示用
 
     void Start()
     {
@@ -22,7 +22,7 @@ public class PlayerAttackManager : MonoBehaviour
 
         if (playerCamera == null)
         {
-            Debug.LogError("カメラが設定されていません！");
+            Debug.LogError("TPSカメラが設定されていません！");
         }
 
         if (playerTransform == null)
@@ -40,74 +40,73 @@ public class PlayerAttackManager : MonoBehaviour
 
     void Update()
     {
-        // 常にレイキャストの可視化を更新
+        // レイキャストを表示
         UpdateVisualizedRay();
 
         if (Input.GetMouseButtonDown(0))
         {
-            AlignPlayerToShootDirection();
-            Shoot();
+            Vector3 targetPoint = GetTargetPoint();
+            AlignPlayerToShootDirection(targetPoint);
+            Shoot(targetPoint);
         }
     }
 
-    // 射撃処理
-    void Shoot()
+    // カメラからレイキャストを使ってターゲットポイントを取得
+    Vector3 GetTargetPoint()
     {
-        Ray ray = new Ray(playerTransform.position, playerTransform.forward);
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2));
         RaycastHit hit;
 
-        Vector3 targetPoint;
         if (Physics.Raycast(ray, out hit, 100f))
         {
-            targetPoint = hit.point;
+            return hit.point; // ヒットした位置を返す
         }
-        else
+
+        // ヒットしなかった場合は最大距離の仮想地点
+        return ray.GetPoint(100f);
+    }
+
+    // プレイヤーの向きを射撃方向に合わせる
+    void AlignPlayerToShootDirection(Vector3 targetPoint)
+    {
+        Vector3 directionToTarget = (targetPoint - playerTransform.position).normalized;
+
+        // 水平方向のみを考慮してプレイヤーを回転
+        directionToTarget.y = 0f; // Y軸成分を無視して水平方向の回転のみ適用
+        if (directionToTarget.sqrMagnitude > 0.01f) // 無効な方向を防ぐ
         {
-            targetPoint = ray.GetPoint(100f);
+            Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
+            playerTransform.rotation = targetRotation;
         }
+    }
 
-        Vector3 shootDirection = (targetPoint - playerTransform.position).normalized;
-        Vector3 spawnPosition = playerTransform.position + shootDirection * spawnDistance;
+    // 弾を発射
+    void Shoot(Vector3 targetPoint)
+    {
+        Vector3 directionToTarget = (targetPoint - playerTransform.position).normalized;
 
+        // 発射位置を計算
+        Vector3 spawnPosition = playerTransform.position + directionToTarget * spawnDistance;
+
+        // 弾を生成して発射
         if (bulletPrefab != null)
         {
             GameObject bullet = Instantiate(bulletPrefab, spawnPosition, Quaternion.identity);
             Rigidbody rb = bullet.GetComponent<Rigidbody>();
             if (rb != null)
             {
-                rb.AddForce(shootDirection * bulletForce, ForceMode.Impulse);
+                rb.AddForce(directionToTarget * bulletForce, ForceMode.Impulse);
             }
         }
     }
 
-    // プレイヤーの向きを射撃方向に合わせる
-    void AlignPlayerToShootDirection()
-    {
-        Ray ray = new Ray(playerTransform.position, playerTransform.forward);
-        RaycastHit hit;
-
-        Vector3 targetPoint;
-        if (Physics.Raycast(ray, out hit, 100f))
-        {
-            targetPoint = hit.point;
-        }
-        else
-        {
-            targetPoint = ray.GetPoint(100f);
-        }
-
-        Vector3 shootDirection = (targetPoint - playerTransform.position).normalized;
-        Quaternion targetRotation = Quaternion.LookRotation(new Vector3(shootDirection.x, 0, shootDirection.z));
-        playerTransform.rotation = targetRotation;
-    }
-
-    // レイキャストの可視化を常に更新
+    // カメラからのレイキャストを可視化
     void UpdateVisualizedRay()
     {
         if (lineRenderer == null || playerCamera == null) return;
 
-        // プレイヤーの位置と向きを基準にレイキャスト
-        Ray ray = new Ray(playerTransform.position, playerTransform.forward);
+        // カメラの中心からのレイキャストを計算
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2));
         RaycastHit hit;
 
         Vector3 endPoint;
@@ -122,7 +121,7 @@ public class PlayerAttackManager : MonoBehaviour
 
         // LineRendererを更新
         lineRenderer.positionCount = 2;
-        lineRenderer.SetPosition(0, ray.origin); // プレイヤー位置
+        lineRenderer.SetPosition(0, ray.origin); // カメラの位置
         lineRenderer.SetPosition(1, endPoint);   // レイキャストの終点
     }
 }
