@@ -80,10 +80,10 @@ public class PlayerAttackController : MonoBehaviour
             return;
         }
 
-        BallMovementManager ballManager = bullet.GetComponent<BallMovementManager>();
+        BallManager ballManager = bullet.GetComponent<BallManager>();
         if (ballManager == null)
         {
-            Debug.LogError("生成された弾に BallMovementManager がアタッチされていません。");
+            Debug.LogError("生成された弾に BallManager がアタッチされていません。");
             return;
         }
 
